@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-server-app
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: queue-server
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  template:
+    metadata:
+      labels:
+        app: queue-server
+    spec:
+      containers:
+        - name: queue-server
+          image: queue-server-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8012
+          command: ["/bin/sh", "-c"]
+          args: ["uvicorn main:app --host 0.0.0.0 --port 8012"]
+          env:
+          - name: CUDA_VISIBLE_DEVICES
+            value: "-1"
+          - name: CELERY_BROKER_URL
+            value: redis://:redis.password@10.152.183.200:6379/0
+          - name: CELERY_RESULT_BACKEND
+            value: redis://:redis.password@10.152.183.200:6379/0
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 250m
+            limits:
+              memory: 128Mi
+              cpu: 500m
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: queue-server-service
+spec:
+  selector:
+    app: queue-server
+  ports:
+    - port: 8012
+      targetPort: 8012
+  type: LoadBalancer
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: queue-server-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: queue-server-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60

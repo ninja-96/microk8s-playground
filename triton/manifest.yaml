@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: triton
+    spec:
+      containers:
+        - name: triton
+          image: nvcr.io/nvidia/tritonserver:23.10-py3
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 500m
+            limits:
+              memory: 1024Mi
+              cpu: 1000m
+              nvidia.com/gpu: 1
+          ports:
+          - containerPort: 8000
+            name: http-triton
+          - containerPort: 8001
+            name: grpc-triton
+          - containerPort: 8002
+            name: metrics-triton
+          volumeMounts:
+          - name: nfs-pv-volume
+            mountPath: /mnt
+          command: ["/bin/sh", "-c"]
+          args: ["tritonserver --model-repository=/mnt/model_repository"]
+      volumes:
+        - name: nfs-pv-volume
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton-service
+spec:
+  selector:
+    app: triton
+  ports:
+    - name: http-triton
+      port: 8000
+      targetPort: 8000
+    - name: grpc-triton
+      port: 8001
+      targetPort: 8001
+    - name: metrics-triton
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
+  сlusterIP: 10.152.183.201

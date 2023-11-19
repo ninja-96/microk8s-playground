@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: ai
+    spec:
+      containers:
+        - name: ai
+          image: localhost:32000/ai:latest
+          resources:
+            requests:
+              cpu: 250m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+          - name: nfs-mount
+            mountPath: /mnt
+          command: ["/bin/sh", "-c"]
+          args: ["uvicorn main:app --host 0.0.0.0 --port 8000"]
+      volumes:
+        - name: nfs-mount
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+spec:
+  selector:
+    app: ai
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+
+
+--- 
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-app
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 30
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30

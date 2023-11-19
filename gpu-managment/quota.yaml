@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: gpu-resource-quota
+spec:
+  hard:
+    nvidia.com/gpu: "1"

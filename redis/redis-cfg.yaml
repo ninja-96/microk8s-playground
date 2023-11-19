@@ -1,0 +1,8 @@
+global:
+  redis:
+    password: "redis.password"
+persistence:
+  enabled: true
+master:
+  service:
+    clusterIP: 10.152.183.200

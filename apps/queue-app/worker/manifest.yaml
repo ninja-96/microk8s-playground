@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-worker-app
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: queue-worker
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  template:
+    metadata:
+      labels:
+        app: queue-worker
+    spec:
+      containers:
+        - name: queue-worker
+          image: queue-worker-app:latest
+          imagePullPolicy: Never
+          command: ["/bin/sh", "-c"]
+          args: ["celery -A worker worker --loglevel=INFO --concurrency=2"]
+          env:
+          - name: CUDA_VISIBLE_DEVICES
+            value: "-1"
+          - name: CELERY_BROKER_URL
+            value: redis://:redis.password@10.152.183.200:6379/0
+          - name: CELERY_RESULT_BACKEND
+            value: redis://:redis.password@10.152.183.200:6379/0
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 250m
+            limits:
+              memory: 128Mi
+              cpu: 500m
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: queue-worker-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: queue-worker-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
