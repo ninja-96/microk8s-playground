@@ -7,4 +7,4 @@ RUN apt install python3-pip -y;
 RUN pip3 install -U pip;
 
 COPY . .
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
