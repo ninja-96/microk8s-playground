@@ -20,6 +20,7 @@ Follow instructions in this [link](https://snapcraft.io/docs/installing-snapd) t
 
 3) Install Microk8s [link](https://microk8s.io/), [script](./scripts/install_microk8s.sh)
 ```bash
+apt install iptables-persistent
 snap install microk8s --classic
 ```
 
@@ -68,7 +69,7 @@ nano /etc/hosts
 ```
 
 3) Run command on main node and follow instructions
-```
+```bash
 microk8s add-node
 ```
 
@@ -121,7 +122,7 @@ mount <nfs-server-ip-address>:/nfs-server /mnt
 
 1) Build and push Docker image to Microk8s registry server
 ```bash
-docker buildx build . --push --platform linux/arm64 -t <micro8ks-registry-ip-address>:32000/<image-name>:<image-tag>
+docker build . --push -t <micro8ks-registry-ip-address>:32000/<image-name>:<image-tag>
 ```
 
 2) Load image to Mi
