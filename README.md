@@ -139,6 +139,5 @@ kubectl apply -f deployment.yaml
 
 
 ## Apps
-### Ai app
-
-### Queue app
+- [AI app](./apps/ai-app/)
+- [Queue app](./apps/queue-app/)
