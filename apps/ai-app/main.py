@@ -2,10 +2,13 @@ import os
 import socket
 from fastapi import FastAPI
 
-import numpy as np
+import torch
+import torchvision
 
 
 app = FastAPI()
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = torchvision.models.resnet50(weights='DEFAULT').eval().to(device)
 
 
 @app.get("/")
@@ -23,16 +26,11 @@ async def listdir():
     return os.listdir('/mnt')
 
 
-@app.get('/predict/{size}/{repeats}')
-async def predict(size: int, repeats: int):
-    for _ in range(repeats):
-        x = np.random.random((size, size)).astype(np.float32)
-        y = np.random.random((size, size)).astype(np.float32)
-
-        a = x + y
-        b = y - x
-        c = x / y
-        d = y * x
-        e = np.mean(x + y / a * b - c)
+@app.get('/predict/{batch_size}/{size}/{repeats}')
+async def predict(batch_size: int, size: int, repeats: int):
+    with torch.inference_mode():
+        x = torch.rand(batch_size, 3, size, size).to(device)
+        for _ in range(repeats):
+            r = model(x)
     
-    return f'{e}'
+    return f'{torch.argmax(r, 1)}'
