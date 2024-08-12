@@ -92,6 +92,7 @@ mkdir -p /nfs-storage
 3) Add rules to `/etc/exports`
 ```
 /nfs-storage  192.168.10.0/24(rw,sync,no_subtree_check)  # only access from 192.168.10.0 network
+/opt/dragoman/nfs	192.168.0.0/16(rw,async,fsid=0,no_subtree_check)
 ```
 
 4) Update exports table
