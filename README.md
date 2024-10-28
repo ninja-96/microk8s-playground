@@ -113,7 +113,8 @@ apt install nfs-common
 
 7) Connect from client PC to NFS server
 ```bash
-mount <nfs-server-ip-address>:/nfs /mnt/nfs
+mount <nfs-server-ip-address>:/data /mnt/nfs/data
+mount <nfs-server-ip-address>:/models /mnt/nfs/models
 ```
 
 > _You can use manifects from [directory](./pvc/) to connect NFS server to Microk8s cluster_
