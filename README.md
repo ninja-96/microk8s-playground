@@ -86,13 +86,14 @@ apt install nfs-kernel-server
 
 2) Create directory for storage
 ```bash
-mkdir -p /nfs-storage
+mkdir -p /nfs
+mkdir -p /nfs/data
+mkdir -p /nfs/models
 ```
 
 3) Add rules to `/etc/exports`
 ```
-/nfs-storage  192.168.10.0/24(rw,sync,no_subtree_check)  # only access from 192.168.10.0 network
-/opt/dragoman/nfs	192.168.0.0/16(rw,async,fsid=0,no_subtree_check)
+/nfs  192.168.10.0/24(rw,async,fsid=0,no_subtree_check)  # only access from 192.168.10.0 network
 ```
 
 4) Update exports table
